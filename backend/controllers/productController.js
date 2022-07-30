@@ -1,6 +1,7 @@
 const Product = require('../models/productModel');
 const errorHander = require('../utils/errorHander');
 const catchAsyncErrors = require('../middleware/catchAsyncErrors');
+const ApiFeatures = require('../utils/apifeatures');
 
 //create product -- Admin
 exports.createProduct = catchAsyncErrors(async (req, res, next) => {
@@ -13,9 +14,17 @@ exports.createProduct = catchAsyncErrors(async (req, res, next) => {
 
 //get all products
 exports.getAllProducts = catchAsyncErrors(async (req, res) => {
-  const products = await Product.find();
-  res.status(200).json({ success: true, products });
+  const resultPerPage = 5;
+  const productCount = await Product.countDocuments();
+
+  const apifeature = new ApiFeatures(Product.find(), req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage);
+  const products = await apifeature.query;
+  res.status(200).json({ success: true, products, productCount });
 });
+
 //productDetails
 exports.productDetails = catchAsyncErrors(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
@@ -57,4 +66,4 @@ exports.deleteProduct = catchAsyncErrors(async (req, res, next) => {
     success: true,
     massage: 'product deleted successfully',
   });
-}); 
+});
